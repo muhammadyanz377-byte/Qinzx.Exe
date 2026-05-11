@@ -1,0 +1,941 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Admin Panel - Qinzx Exe</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@600;700&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        dark: { 900: '#09090b', 800: '#121216', 700: '#1c1c22', 600: '#272730' },
+                        brand: { red: '#e52525', glow: '#ff4b4b', dark: '#8a1010' }
+                    },
+                    fontFamily: { sans: ['Inter', 'sans-serif'], display: ['Poppins', 'sans-serif'] },
+                    boxShadow: {
+                        'glow-red': '0 0 20px rgba(229, 37, 37, 0.3)',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+                .no-scrollbar::-webkit-scrollbar { display: none; }
+        * { transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1); }
+
+        .step-content { display: none; opacity: 0; }
+        .step-content.active { display: block; animation: slideFadeIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        
+        @keyframes slideFadeIn {
+            from { opacity: 0; transform: translateX(20px) scale(0.98); }
+            to { opacity: 1; transform: translateX(0) scale(1); }
+        }
+
+        .input-group label { transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); pointer-events: none; }
+        .input-field:focus ~ label, .input-field:not(:placeholder-shown) ~ label {
+            transform: translateY(-24px) scale(0.85);
+            color: #e52525;
+            background: #121216; /* Menyesuaikan bg dashboard */
+            padding: 0 4px;
+        }
+        .input-field:focus { box-shadow: 0 4px 20px rgba(229, 37, 37, 0.1); border-color: #e52525; }
+
+        .glass { background: rgba(28, 28, 34, 0.6); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.05); }
+        .glass-panel { background: rgba(28, 28, 34, 0.4); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.05); }
+        
+        #progress-indicator { transition: width 0.5s cubic-bezier(0.16, 1, 0.3, 1); }
+        #toast { transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1); transform: translate(-50%, 100px); opacity: 0; }
+        #toast.show { transform: translate(-50%, 0); opacity: 1; }
+
+        .slot-success { border-color: #4ade80 !important; box-shadow: 0 0 15px rgba(74, 222, 128, 0.3); }
+        .btn-active:active { transform: scale(0.95); }
+    </style>
+</head>
+<body class="bg-dark-900 text-gray-200 font-sans antialiased">
+
+    <!-- LOGIN OVERLAY -->
+    <div id="login-section" class="fixed inset-0 z-[100] bg-dark-900 flex items-center justify-center p-6">
+        <div class="w-full max-w-md bg-dark-800 border border-white/5 rounded-3xl p-8 shadow-2xl">
+            <div class="text-center mb-8">
+                <div class="text-4xl mb-4">ðŸŽ¯</div>
+                <h1 class="text-2xl font-display font-bold text-white">Qinzx Exe - Admin Panel</h1>
+                <p class="text-sm text-gray-500">Otentikasi diperlukan untuk melanjutkan</p>
+            </div>
+            <div class="space-y-4">
+                <input type="email" id="adminEmail" placeholder="Email Admin" class="w-full bg-dark-700 border border-white/10 rounded-xl px-4 py-3 outline-none focus:border-brand-red transition-all">
+                <input type="password" id="adminPassword" placeholder="Password" class="w-full bg-dark-700 border border-white/10 rounded-xl px-4 py-3 outline-none focus:border-brand-red transition-all">
+                <button onclick="handleLogin()" id="loginBtn" class="w-full bg-brand-red text-white font-bold py-3 rounded-xl shadow-glow-red hover:scale-[1.02] active:scale-95 transition-all">Masuk Ke Dashboard</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN DASHBOARD WRAPPER -->
+    <div id="admin-dashboard" class="hidden min-h-screen flex flex-col md:flex-row">
+        
+        <!-- SIDEBAR / MENU -->
+        <aside class="w-full md:w-64 bg-dark-800 border-r border-white/5 flex flex-col z-40">
+            <div class="p-6">
+                <h2 class="text-xl font-display font-bold text-white"><span class="text-brand-red">Qinzx</span> Exe</h2>
+                <p class="text-[10px] text-gray-500 uppercase tracking-widest mt-1">Admin Control Panel</p>
+            </div>
+
+            <nav class="flex-1 px-4 space-y-2">
+                <button onclick="switchTab('upload')" class="nav-link w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all hover:bg-white/5 text-gray-400" id="btn-upload">
+                    <i class="fa-solid fa-plus-circle w-5"></i> Upload Mod
+                </button>
+                <button onclick="switchTab('manage')" class="nav-link w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all hover:bg-white/5 text-gray-400" id="btn-manage">
+                    <i class="fa-solid fa-layer-group w-5"></i> Kelola Konten
+                </button>
+                <button onclick="switchTab('notif')" class="nav-link w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all hover:bg-white/5 text-gray-400" id="btn-notif">
+                    <i class="fa-solid fa-bell w-5"></i> Notifications
+                </button>
+                <button onclick="switchTab('announcement')" class="nav-link w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all hover:bg-white/5 text-gray-400" id="btn-announcement">
+                    <i class="fa-solid fa-bullhorn w-5"></i> Announcement
+                </button>
+                <button onclick="switchTab('settings')" class="nav-link w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all hover:bg-white/5 text-gray-400" id="btn-settings">
+                    <i class="fa-solid fa-cog w-5"></i> Settings
+                </button>
+            </nav>
+
+            <div class="p-4 border-t border-white/5">
+                <button onclick="handleLogout()" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-red-500 hover:bg-red-500/10 transition-all">
+                    <i class="fa-solid fa-sign-out-alt w-5"></i> Logout
+                </button>
+            </div>
+        </aside>
+
+        <!-- CONTENT AREA -->
+        <main class="flex-1 flex flex-col h-screen overflow-hidden bg-dark-900">
+            
+            <!-- HEADER -->
+            <header class="h-16 border-b border-white/5 flex items-center justify-between px-8 bg-dark-800/50 backdrop-blur-md">
+                <h3 id="current-tab-title" class="font-bold text-white uppercase tracking-wider text-xs">Dashboard</h3>
+                <div class="flex items-center gap-4">
+                    <div class="text-right hidden sm:block">
+                        <p class="text-xs font-bold text-white" id="admin-name">Admin - Qinzx Exe</p>
+                        <p class="text-[10px] text-green-500">System Online</p>
+                    </div>
+                    <div class="w-10 h-10 rounded-full bg-brand-red/20 border border-brand-red/30 flex items-center justify-center text-brand-red">
+                        <i class="fa-solid fa-user-shield"></i>
+                    </div>
+                </div>
+            </header>
+
+            <!-- TAB CONTENT CONTAINER -->
+            <div class="flex-1 overflow-y-auto p-4 md:p-8 no-scrollbar" id="tab-container">
+                
+                <!-- TAB: UPLOAD / EDIT MOD (THE WIZARD) -->
+                                <section id="tab-upload" class="hidden max-w-[480px] mx-auto bg-dark-800 rounded-3xl border border-white/5 overflow-hidden shadow-2xl relative flex flex-col mb-10">
+                    <div class="p-6 bg-dark-800/50 backdrop-blur-md">
+                        <div class="flex justify-between items-center px-2 relative mb-4">
+                            <div class="absolute h-[2px] bg-dark-700 left-8 right-8 top-4 z-0">
+                                <div id="progress-indicator" class="h-full bg-brand-red w-[0%] shadow-[0_0_10px_#e52525]"></div>
+                            </div>
+                            <div class="step-node active relative z-10 flex flex-col items-center gap-2" data-step="1">
+                                <div class="w-8 h-8 rounded-full bg-brand-red text-white flex items-center justify-center text-xs font-bold ring-4 ring-dark-800 transition-all">1</div>
+                                <span class="text-[9px] font-medium text-brand-red">Info</span>
+                            </div>
+                            <div class="step-node relative z-10 flex flex-col items-center gap-2" data-step="2">
+                                <div class="w-8 h-8 rounded-full bg-dark-700 text-gray-500 flex items-center justify-center text-xs font-bold ring-4 ring-dark-800 transition-all">2</div>
+                                <span class="text-[9px] font-medium text-gray-500">Media</span>
+                            </div>
+                            <div class="step-node relative z-10 flex flex-col items-center gap-2" data-step="3">
+                                <div class="w-8 h-8 rounded-full bg-dark-700 text-gray-500 flex items-center justify-center text-xs font-bold ring-4 ring-dark-800 transition-all">3</div>
+                                <span class="text-[9px] font-medium text-gray-500">Preview</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="px-6 pb-28 h-[550px] overflow-y-auto no-scrollbar">
+                        <div id="step-1" class="step-content active space-y-6">
+                            <div class="input-group relative">
+                                <input type="text" id="modName" placeholder=" " class="input-field w-full bg-transparent border-b-2 border-dark-700 py-2 outline-none transition-all text-sm">
+                                <label class="absolute left-0 top-2 text-gray-500 text-sm">Nama Mod</label>
+                            </div>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div class="input-group relative">
+                                    <input type="text" id="modVersion" placeholder=" " class="input-field w-full bg-transparent border-b-2 border-dark-700 py-2 outline-none transition-all text-sm">
+                                    <label class="absolute left-0 top-2 text-gray-500 text-sm">Versi (v1.0)</label>
+                                </div>
+                                <select id="modCategory" class="bg-dark-700 border border-white/5 rounded-xl p-3 text-sm outline-none focus:border-brand-red">
+    <option value="Game Mod">Game Mod</option>
+    <option value="APK Tool">APK Tool</option>
+    <option value="Script">Script</option>
+    <option value="Lainnya">Lainnya</option> </select>
+                            </div>
+                            <textarea id="modDesc" placeholder="Deskripsi..." class="w-full bg-dark-700 border border-white/5 rounded-xl p-4 text-sm outline-none focus:border-brand-red min-h-[120px]"></textarea>
+                            
+                            <div>
+                                <div class="flex justify-between items-center mb-3">
+                                    <label class="text-xs font-bold text-gray-400">Fitur Utama</label>
+                                    <button onclick="toggleFeatureInput()" class="text-[10px] bg-brand-red/10 text-brand-red px-2 py-1 rounded-lg">+ Tambah</button>
+                                </div>
+                                <div id="feature-input-container" class="hidden flex gap-2 mb-3">
+                                    <input type="text" id="featureInput" class="flex-1 bg-dark-700 border border-white/5 rounded-lg px-3 py-1 text-xs outline-none" placeholder="Nama fitur...">
+                                    <button onclick="saveFeature()" class="bg-brand-red px-3 py-1 rounded-lg text-[10px] font-bold">Add</button>
+                                </div>
+                                <div id="feature-list" class="flex flex-wrap gap-2"></div>
+                            </div>
+                        </div>
+
+                        <div id="step-2" class="step-content space-y-6">
+                            <div class="grid grid-cols-2 gap-4">
+                                <script>
+                                    for(let i=0; i<4; i++) {
+                                        document.write(`
+                                        <div id="slot-container-${i}" class="relative aspect-[4/3] bg-dark-700 border-2 border-dashed border-dark-600 rounded-2xl overflow-hidden">
+                                            <input type="file" id="review${i}" class="hidden" accept="image/*" onchange="handleSlotUpload(this, ${i})">
+                                            <label for="review${i}" id="label-slot-${i}" class="absolute inset-0 flex flex-col items-center justify-center cursor-pointer">
+                                                <i class="fa-solid fa-camera text-gray-500 mb-1"></i>
+                                                <span class="text-[9px] text-gray-500">Slot ${i+1}</span>
+                                            </label>
+                                            <div class="absolute bottom-0 left-0 w-full h-1 bg-dark-900"><div id="progress-slot-${i}" class="h-full w-0 shadow-[0_0_8px_#4ade80]"></div></div>
+                                            <img id="img-slot-${i}" class="absolute inset-0 w-full h-full object-cover hidden">
+                                            <button onclick="removeImage(${i})" id="del-slot-${i}" class="absolute top-2 right-2 w-6 h-6 bg-black/60 rounded-full flex items-center justify-center text-white text-[10px] hidden z-30"><i class="fa-solid fa-xmark"></i></button>
+                                        </div>
+                                        `);
+                                    }
+                                </script>
+                            </div>
+                            <div class="space-y-4 pt-4 border-t border-white/5">
+                                <div class="input-group relative">
+                                    <input type="url" id="modLink" placeholder=" " class="input-field w-full bg-transparent border-b-2 border-dark-700 py-2 outline-none transition-all text-sm">
+                                    <label class="absolute left-0 top-2 text-gray-500 text-sm">Link Download (URL)</label>
+                                </div>
+                                <div class="input-group relative">
+                                    <input type="text" id="modSize" placeholder=" " class="input-field w-full bg-transparent border-b-2 border-dark-700 py-2 outline-none transition-all text-sm">
+                                    <label class="absolute left-0 top-2 text-gray-500 text-sm">Ukuran (Misal: 120 MB)</label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="step-3" class="step-content">
+                            <div class="w-full bg-dark-900 rounded-3xl overflow-hidden border border-white/5 pb-6">
+                                <div class="relative w-full h-[180px] bg-dark-800">
+                                    <img id="prevMainImage" src="" class="w-full h-full object-cover">
+                                    <div class="absolute inset-0 bg-gradient-to-t from-dark-900 via-transparent to-transparent"></div>
+                                </div>
+                                <div class="px-4">
+                                    <div class="glass-panel p-4 rounded-2xl -mt-8 relative mb-4">
+                                        <h2 id="prevTitle" class="font-bold text-white text-base">Nama Mod</h2>
+                                        <div class="flex items-center gap-2 mt-1">
+                                            <span id="prevCategory" class="bg-brand-red/20 text-brand-red px-2 py-0.5 rounded text-[10px] font-bold">Kategori</span>
+                                            <span id="prevVersion" class="text-gray-500 text-[10px]">v1.0</span>
+                                        </div>
+                                    </div>
+                                    <div id="prevFeaturesContainer" class="flex flex-wrap gap-2 mb-4"></div>
+                                    <p id="prevDesc" class="text-[10px] text-gray-400 line-clamp-3 mb-4"></p>
+                                    <div class="bg-gradient-to-r from-brand-dark to-brand-red text-white rounded-xl py-3 text-center text-xs font-bold shadow-glow-red">
+                                        Download (<span id="prevSize">0 MB</span>)
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="absolute bottom-0 left-0 w-full p-6 bg-dark-800/90 backdrop-blur-md border-t border-white/5 flex gap-3">
+                        <button id="prevBtn" onclick="goBackStep()" class="hidden flex-1 py-3 bg-dark-700 text-white rounded-xl text-sm font-bold">Kembali</button>
+                        <button id="nextBtn" onclick="nextStep()" class="flex-[2] py-3 bg-brand-red text-white rounded-xl text-sm font-bold shadow-glow-red flex items-center justify-center gap-2">
+                            <span>Berikutnya</span> <i class="fa-solid fa-arrow-right text-xs" id="btnIcon"></i>
+                        </button>
+                    </div>
+                </section>
+
+                <!-- TAB: MANAGE CONTENT -->
+                <section id="tab-manage" class="hidden">
+                    <div class="flex justify-between items-center mb-6">
+                        <h4 class="font-bold text-white">Database Mod</h4>
+                        <div class="relative">
+                            <input type="text" id="searchMod" placeholder="Cari mod..." class="bg-dark-800 border border-white/5 rounded-full px-4 py-2 text-xs outline-none focus:border-brand-red w-48 md:w-64">
+                        </div>
+                    </div>
+                    <div id="admin-mod-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <!-- Card mods loaded here -->
+                    </div>
+                </section>
+
+                <!-- TAB: NOTIFICATIONS -->
+                <section id="tab-notif" class="hidden max-w-2xl mx-auto space-y-4">
+                    <div class="flex justify-between items-center">
+                        <h4 class="font-bold text-white">Activity Logs</h4>
+                        <button onclick="clearNotifs()" class="text-[10px] text-gray-500 hover:text-white">Clear All</button>
+                    </div>
+                    <div id="notif-list" class="space-y-3">
+                        <!-- Notification items -->
+                    </div>
+                </section>
+
+                <!-- TAB: ANNOUNCEMENT -->
+                <section id="tab-announcement" class="hidden max-w-xl mx-auto">
+                    <div class="bg-dark-800 p-6 rounded-3xl border border-white/5 space-y-4">
+                        <h4 class="font-bold text-white">Broadcast Announcement</h4>
+                        <textarea id="note-text" placeholder="Tulis pengumuman baru..." class="w-full bg-dark-700 border border-white/5 rounded-xl p-4 text-sm outline-none min-h-[150px]"></textarea>
+                        <div class="flex items-center gap-4">
+                            <div class="flex-1">
+                                <label class="text-[10px] text-gray-500 block mb-1">Status</label>
+                                <select id="note-status" class="w-full bg-dark-700 border border-white/5 rounded-xl p-3 text-sm outline-none">
+                                    <option value="active">Aktif (Tampilkan)</option>
+                                    <option value="inactive">Non-Aktif</option>
+                                </select>
+                            </div>
+                        </div>
+                        <button onclick="saveAnnouncement()" class="w-full bg-brand-red text-white font-bold py-3 rounded-xl shadow-glow-red mt-4">Simpan & Publikasikan</button>
+                    </div>
+                </section>
+
+                <!-- TAB: SETTINGS -->
+                <section id="tab-settings" class="hidden max-w-xl mx-auto">
+                    <div class="bg-dark-800 p-6 rounded-3xl border border-white/5 space-y-6">
+                        <h4 class="font-bold text-white">Platform Configuration</h4>
+                        
+                        <div class="space-y-4">
+                            <div class="flex justify-between items-center p-4 bg-dark-700 rounded-2xl">
+                                <div>
+                                    <p class="text-sm font-bold text-white">Approval System</p>
+                                    <p class="text-[10px] text-gray-500">Mod baru butuh persetujuan admin</p>
+                                </div>
+                                <input type="checkbox" id="set-approval" class="w-10 h-5 bg-dark-600 rounded-full appearance-none checked:bg-brand-red transition-all cursor-pointer relative after:content-[''] after:absolute after:w-4 after:h-4 after:bg-white after:rounded-full after:top-0.5 after:left-0.5 checked:after:left-5 after:transition-all">
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-4">
+                                <div class="bg-dark-700 p-4 rounded-2xl">
+                                    <label class="text-[10px] text-gray-500 block mb-2">Upload Limit / Day</label>
+                                    <input type="number" id="set-limit" class="bg-transparent border-b border-white/10 w-full outline-none text-white font-bold">
+                                </div>
+                                <div class="bg-dark-700 p-4 rounded-2xl">
+                                    <label class="text-[10px] text-gray-500 block mb-2">Max File Size (MB)</label>
+                                    <input type="number" id="set-maxsize" class="bg-transparent border-b border-white/10 w-full outline-none text-white font-bold">
+                                </div>
+                            </div>
+                        </div>
+
+                        <button onclick="saveSettings()" class="w-full bg-white/10 text-white font-bold py-3 rounded-xl hover:bg-white/20 transition-all mt-4 border border-white/5">Update Settings</button>
+                    </div>
+                </section>
+
+            </div>
+        </main>
+    </div>
+
+    <!-- TOAST -->
+    <div id="toast" class="fixed bottom-10 left-1/2 z-[200] glass px-6 py-4 rounded-2xl flex items-center gap-3 border border-brand-red/30 shadow-2xl pointer-events-none">
+        <i class="fa-solid fa-circle-info text-brand-red"></i>
+        <span id="toast-text" class="text-sm font-medium text-white">Action Completed</span>
+    </div>
+
+    <!-- SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
+
+    <script>
+        // CONFIG
+        const firebaseConfig = {
+  apiKey: "AIzaSyCI1yhGUaKKRQPkVleJaVCh1kEG6f2JakA",
+  authDomain: "webb-fd04f.firebaseapp.com",
+  projectId: "webb-fd04f",
+  storageBucket: "webb-fd04f.firebasestorage.app",
+  messagingSenderId: "101481325951",
+  appId: "1:101481325951:web:6d19fb454b3bbb2eb7264a",
+  measurementId: "G-Y0NT5DNKX8"
+};
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        const auth = firebase.auth();
+        const storage = firebase.storage();
+
+                // STATE
+        let currentTab = 'upload';
+        let currentStep = 1;
+        const totalSteps = 3;
+        let editId = null;
+        let uploadedImages = [null, null, null, null];
+        let modFeatures = [];
+
+        /* --- NAVIGATION --- */
+        function updateProgress() {
+    // 1. Ambil elemen-elemen utama
+    const progressIndicator = document.getElementById('progress-indicator');
+    const nextBtn = document.getElementById('nextBtn');
+    const prevBtn = document.getElementById('prevBtn');
+    const nextBtnIcon = document.getElementById('btnIcon');
+
+    // Jika progress bar tidak ada, hentikan fungsi agar tidak error (Guard Clause)
+    if (!progressIndicator) return;
+
+    // 2. Update lebar progress bar
+    const progress = ((currentStep - 1) / (totalSteps - 1)) * 100;
+    progressIndicator.style.width = progress + '%';
+    
+    // 3. Update tampilan Node Step (Angka 1, 2, 3)
+    document.querySelectorAll('.step-node').forEach(node => {
+        const nodeStep = parseInt(node.getAttribute('data-step'));
+        const icon = node.querySelector('div');
+        const label = node.querySelector('span');
+        
+        if (!icon || !label) return; // Pastikan elemen di dalam node ada
+
+        if (nodeStep < currentStep) {
+            // Step yang sudah dilewati (Centang Hijau)
+            icon.className = "w-8 h-8 rounded-full bg-green-500 text-white flex items-center justify-center text-xs font-bold ring-4 ring-dark-800 scale-90";
+            icon.innerHTML = '<i class="fa-solid fa-check"></i>';
+            label.className = "text-[9px] font-medium text-green-500";
+        } else if (nodeStep === currentStep) {
+            // Step yang sedang aktif (Merah)
+            icon.className = "w-8 h-8 rounded-full bg-brand-red text-white flex items-center justify-center text-xs font-bold ring-4 ring-dark-800 scale-105";
+            icon.innerHTML = nodeStep;
+            label.className = "text-[9px] font-medium text-brand-red";
+        } else {
+            // Step yang belum tercapai (Abu-abu)
+            icon.className = "w-8 h-8 rounded-full bg-dark-700 text-gray-500 flex items-center justify-center text-xs font-bold ring-4 ring-dark-800";
+            icon.innerHTML = nodeStep;
+            label.className = "text-[9px] font-medium text-gray-500";
+        }
+    });
+
+    // 4. Update Tombol "Kembali" (Sembunyikan jika di Step 1)
+    if (prevBtn) {
+        prevBtn.classList.toggle('hidden', currentStep === 1);
+    }
+    
+    // 5. Update Teks dan Ikon Tombol "Berikutnya"
+    if (nextBtn) {
+        const nextBtnText = nextBtn.querySelector('span');
+        
+        if (currentStep === 3) {
+            // Jika di step terakhir (Preview), ubah teks jadi Publish/Update
+            if (nextBtnText) {
+                nextBtnText.innerText = editId ? 'Update Mod' : 'Publish Mod';
+            }
+            if (nextBtnIcon) {
+                nextBtnIcon.className = "fa-solid fa-paper-plane text-xs";
+            }
+        } else {
+            // Jika di step biasa, teksnya "Berikutnya"
+            if (nextBtnText) {
+                nextBtnText.innerText = 'Berikutnya';
+            }
+            if (nextBtnIcon) {
+                nextBtnIcon.className = "fa-solid fa-arrow-right text-xs";
+            }
+        }
+    }
+}
+
+        function nextStep() {
+            if (currentStep === 1) {
+                if (!document.getElementById('modName').value) return showToast("Nama mod wajib diisi");
+            }
+            if (currentStep === 2) {
+                if (!uploadedImages.some(img => img !== null)) return showToast("Upload minimal 1 gambar");
+                updatePreview();
+            }
+            if (currentStep === 3) {
+                publishMod();
+                return;
+            }
+
+            if (currentStep < totalSteps) {
+                document.getElementById(`step-${currentStep}`).classList.remove('active');
+                currentStep++;
+                document.getElementById(`step-${currentStep}`).classList.add('active');
+                updateProgress();
+            }
+        }
+
+        function goBackStep() {
+            if (currentStep > 1) {
+                document.getElementById(`step-${currentStep}`).classList.remove('active');
+                currentStep--;
+                document.getElementById(`step-${currentStep}`).classList.add('active');
+                updateProgress();
+            }
+        }
+
+        /* --- FEATURES --- */
+        function toggleFeatureInput() {
+            document.getElementById('feature-input-container').classList.toggle('hidden');
+        }
+
+        function saveFeature() {
+            const val = document.getElementById('featureInput').value.trim();
+            if(val) {
+                modFeatures.push(val);
+                renderFeatures();
+                document.getElementById('featureInput').value = '';
+            }
+        }
+
+        function removeFeature(idx) {
+            modFeatures.splice(idx, 1);
+            renderFeatures();
+        }
+
+        function renderFeatures() {
+            const list = document.getElementById('feature-list');
+            list.innerHTML = modFeatures.map((f, i) => `
+                <div class="flex items-center gap-2 bg-brand-red/10 border border-brand-red/20 text-brand-red px-2 py-1 rounded-lg text-[10px]">
+                    ${f} <button onclick="removeFeature(${i})"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+            `).join('');
+        }
+
+        function handleSlotUpload(inputEl, index) {
+    const file = inputEl.files[0];
+    if (!file) return;
+
+    // Validasi ukuran (Maks 800KB agar Firestore tidak overload)
+    if (file.size > 800000) {
+        showToast("Gambar terlalu besar! Maksimal 800KB");
+        inputEl.value = "";
+        return;
+    }
+
+    const progressBar = document.getElementById(`progress-slot-${index}`);
+    const label = document.getElementById(`label-slot-${index}`);
+    const imgEl = document.getElementById(`img-slot-${index}`);
+    const delBtn = document.getElementById(`del-slot-${index}`);
+    const container = document.getElementById(`slot-container-${index}`);
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const base64Data = e.target.result;
+        
+        // Simpan ke array global (state)
+        uploadedImages[index] = base64Data;
+
+        // Update UI secara instan
+        imgEl.src = base64Data;
+        imgEl.classList.remove('hidden');
+        label.classList.add('hidden');
+        delBtn.classList.remove('hidden');
+        container.classList.add('slot-success');
+        
+        // Progress bar langsung hijau
+        progressBar.style.width = "100%";
+        progressBar.style.background = "#4ade80";
+        showToast(`Gambar ${index + 1} siap!`);
+    };
+    reader.readAsDataURL(file);
+}
+
+async function editMod(id) {
+    try {
+        showToast("Mengambil data...");
+        const doc = await db.collection('mods').doc(id).get();
+        if (!doc.exists) return showToast("Data tidak ditemukan");
+        
+        const data = doc.data();
+        editId = id;
+
+        // 1. Isi input text
+        document.getElementById('modName').value = data.title || "";
+        document.getElementById('modVersion').value = data.version || "";
+        document.getElementById('modCategory').value = data.category || "Lainnya";
+        document.getElementById('modDesc').value = data.desc || "";
+        document.getElementById('modLink').value = data.link || "";
+        document.getElementById('modSize').value = data.size || "";
+        modFeatures = data.features || [];
+        
+        // 2. Reset status gambar lama
+        uploadedImages = [null, null, null, null];
+        for(let i=0; i<4; i++) {
+            // Bersihkan tampilan slot
+            const imgEl = document.getElementById(`img-slot-${i}`);
+            const label = document.getElementById(`label-slot-${i}`);
+            const delBtn = document.getElementById(`del-slot-${i}`);
+            const container = document.getElementById(`slot-container-${i}`);
+            const progress = document.getElementById(`progress-slot-${i}`);
+            const input = document.getElementById(`review${i}`);
+
+            input.value = ""; // Reset input file
+            imgEl.classList.add('hidden');
+            label.classList.remove('hidden');
+            delBtn.classList.add('hidden');
+            container.classList.remove('slot-success');
+            progress.style.width = "0%";
+
+            // 3. Masukkan gambar dari database jika ada
+            if(data.images && data.images[i]) {
+                uploadedImages[i] = data.images[i];
+                imgEl.src = data.images[i];
+                imgEl.classList.remove('hidden');
+                label.classList.add('hidden');
+                delBtn.classList.remove('hidden');
+                container.classList.add('slot-success');
+                progress.style.width = "100%";
+                progress.style.background = "#4ade80";
+            }
+        }
+
+        renderFeatures();
+        switchTab('upload'); // Pindah ke tab wizard
+        currentStep = 1;
+        
+        // Update tampilan wizard
+        document.querySelectorAll('.step-content').forEach(s => s.classList.remove('active'));
+        document.getElementById('step-1').classList.add('active');
+        updateProgress();
+
+    } catch (err) {
+        console.error(err);
+        showToast("Gagal memuat data edit");
+    }
+}
+
+        function removeImage(idx) {
+    uploadedImages[idx] = null;
+    const input = document.getElementById(`review${idx}`);
+    if(input) input.value = ""; // Penting: Reset input file agar bisa upload ulang file yang sama
+    
+    document.getElementById(`img-slot-${idx}`).classList.add('hidden');
+    document.getElementById(`img-slot-${idx}`).src = "";
+    document.getElementById(`label-slot-${idx}`).classList.remove('hidden');
+    document.getElementById(`del-slot-${idx}`).classList.add('hidden');
+    document.getElementById(`slot-container-${idx}`).classList.remove('slot-success');
+    document.getElementById(`progress-slot-${idx}`).style.width = "0";
+}
+
+        /* --- PREVIEW --- */
+        function updatePreview() {
+            document.getElementById('prevTitle').innerText = document.getElementById('modName').value;
+            document.getElementById('prevCategory').innerText = document.getElementById('modCategory').value;
+            document.getElementById('prevVersion').innerText = document.getElementById('modVersion').value || 'v1.0';
+            document.getElementById('prevDesc').innerText = document.getElementById('modDesc').value;
+            document.getElementById('prevSize').innerText = document.getElementById('modSize').value || '0 MB';
+            document.getElementById('prevMainImage').src = uploadedImages.find(i => i !== null);
+            
+            document.getElementById('prevFeaturesContainer').innerHTML = modFeatures.map(f => `
+                <span class="bg-dark-700 text-gray-300 px-2 py-1 rounded text-[9px] border border-white/5"> ${f}</span>
+            `).join('');
+        }
+
+        /* --- DATABASE ACTIONS --- */
+                async function publishMod() {
+            // Persiapkan data dasar
+            const data = {
+                title: document.getElementById('modName').value,
+                version: document.getElementById('modVersion').value || 'v1.0',
+                category: document.getElementById('modCategory').value,
+                desc: document.getElementById('modDesc').value,
+                link: document.getElementById('modLink').value,
+                size: document.getElementById('modSize').value,
+                features: modFeatures,
+                images: uploadedImages.filter(img => img !== null),
+                // Selalu update waktu setiap kali ada perubahan/simpan
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                status: editId ? "approved" : "pending"
+            };
+
+            try {
+                const btn = document.getElementById('nextBtn');
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fa-solid fa-spinner animate-spin"></i> Menyimpan...';
+
+                if(editId) {
+                    // Update data yang sudah ada
+                    await db.collection('mods').doc(editId).update(data);
+                    logAction('edit', `Admin memperbarui mod: ${data.title}`);
+                    showToast("Mod Berhasil Diupdate!");
+                } else {
+                    // Tambahkan createdAt hanya saat pertama kali buat
+                    data.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+                    await db.collection('mods').add(data);
+                    logAction('upload', `Admin mengupload mod baru: ${data.title}`);
+                    showToast("Mod Baru Berhasil Disimpan!");
+                }
+
+                resetWizard();
+                switchTab('manage');
+                loadMods();
+            } catch(e) { 
+                console.error(e);
+                showToast("Gagal menyimpan data"); 
+            } finally {
+                const btn = document.getElementById('nextBtn');
+                btn.disabled = false;
+                btn.innerHTML = `<span>${editId ? 'Update Mod' : 'Publish Mod'}</span> <i class="fa-solid fa-paper-plane text-xs"></i>`;
+            }
+        }
+
+        function resetWizard() {
+            editId = null;
+            currentStep = 1;
+            modFeatures = [];
+            uploadedImages = [null, null, null, null];
+            document.querySelectorAll('input').forEach(i => i.value = "");
+            document.querySelector('textarea').value = "";
+            for(let i=0; i<4; i++) removeImage(i);
+            renderFeatures();
+            document.querySelectorAll('.step-content').forEach(s => s.classList.remove('active'));
+            document.getElementById('step-1').classList.add('active');
+            updateProgress();
+        }
+
+        async function loadMods() {
+    const list = document.getElementById('admin-mod-list');
+    list.innerHTML = `<div class="col-span-full py-10 text-center text-gray-500">Loading database...</div>`;
+    
+    const user = auth.currentUser;
+    if (!user) {
+        list.innerHTML = `<div class="col-span-full py-10 text-center text-red-500">Unauthorized: Not logged in</div>`;
+        return;
+    }
+
+    const snapshot = await db.collection('mods')
+        .orderBy('updatedAt', 'desc')
+        .get();
+
+    list.innerHTML = "";
+
+snapshot.forEach(doc => {
+    const mod = doc.data();
+    const id = doc.id; 
+        list.innerHTML += `
+    <div class="bg-dark-800 border border-white/5 rounded-2xl overflow-hidden flex flex-col group hover:border-brand-red/30 transition-all">
+        <div class="h-24 bg-dark-700 relative">
+            <img src="${mod.images?.[0] || ''}" class="w-full h-full object-cover opacity-60">
+            <div class="absolute inset-0 bg-gradient-to-t from-dark-800 to-transparent"></div>
+            <span class="absolute top-2 right-2 text-[8px] font-bold px-2 py-0.5 rounded ${mod.status === 'approved' ? 'bg-green-500/20 text-green-500' : 'bg-orange-500/20 text-orange-500'}">
+                ${(mod.status || 'pending').toUpperCase()}
+            </span>
+        </div>
+        <div class="p-3">
+            <h5 class="text-xs font-bold text-white truncate">${mod.title}</h5>
+            <p class="text-[9px] text-gray-500">${mod.category} • ${mod.version}</p>
+            <div class="flex gap-2 mt-3">
+                <button onclick="editMod('${id}')" class="flex-1 py-2 bg-brand-red/10 text-brand-red rounded-lg text-[9px] font-bold hover:bg-brand-red hover:text-white transition-all">EDIT</button>
+                <button onclick="deleteMod('${id}', '${mod.title}')" class="w-10 py-2 bg-dark-700 text-red-500 rounded-lg text-[9px] hover:bg-red-500 hover:text-white transition-all"><i class="fa-solid fa-trash"></i></button>
+            </div>
+        </div>
+    </div>`;
+});
+}
+
+                async function editMod(id) {
+    try {
+        showToast("Memuat data...");
+        const doc = await db.collection('mods').doc(id).get();
+        if (!doc.exists) return showToast("Data hilang!");
+        
+        const data = doc.data();
+        editId = id;
+
+        // Isi form teks
+        document.getElementById('modName').value = data.title || "";
+        document.getElementById('modVersion').value = data.version || "";
+        document.getElementById('modCategory').value = data.category || "Lainnya";
+        document.getElementById('modDesc').value = data.desc || "";
+        document.getElementById('modLink').value = data.link || "";
+        document.getElementById('modSize').value = data.size || "";
+        modFeatures = data.features || [];
+        
+        // Reset & Isi ulang slot gambar
+        uploadedImages = [null, null, null, null];
+        for(let i=0; i<4; i++) {
+            removeImage(i); // Bersihkan sisa UI sebelumnya
+            
+            if(data.images && data.images[i]) {
+                uploadedImages[i] = data.images[i];
+                const imgEl = document.getElementById(`img-slot-${i}`);
+                imgEl.src = data.images[i];
+                imgEl.classList.remove('hidden');
+                document.getElementById(`label-slot-${i}`).classList.add('hidden');
+                document.getElementById(`del-slot-${i}`).classList.remove('hidden');
+                document.getElementById(`slot-container-${i}`).classList.add('slot-success');
+                const prog = document.getElementById(`progress-slot-${i}`);
+                prog.style.width = "100%";
+                prog.style.background = "#4ade80";
+            }
+        }
+
+        renderFeatures();
+        switchTab('upload'); 
+        currentStep = 1;
+        updateProgress();
+    } catch (err) {
+        showToast("Error saat edit");
+    }
+}
+
+        async function deleteMod(id, title) {
+            if(confirm(`Hapus mod "${title}"?`)) {
+                await db.collection('mods').doc(id).delete();
+                logAction('delete', `Admin menghapus mod: ${title}`);
+                loadMods();
+                showToast("Mod telah dihapus");
+            }
+        }
+
+        /* --- NOTIFICATION LOGS --- */
+        async function logAction(type, message) {
+            await db.collection('notifications').add({
+                type,
+                message,
+                timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                read: false
+            });
+            loadNotifs();
+        }
+
+        async function loadNotifs() {
+            const list = document.getElementById('notif-list');
+            const user = auth.currentUser;
+if (!user) return;
+
+const snap = await db.collection('notifications')
+    .orderBy('timestamp', 'desc')
+    .limit(10)
+    .get();
+            list.innerHTML = "";
+            snap.forEach(doc => {
+                const n = doc.data();
+                const icon = n.type === 'upload' ? 'plus-circle text-green-500' : n.type === 'edit' ? 'pen text-blue-500' : 'trash text-red-500';
+                list.innerHTML += `
+                <div class="p-4 bg-dark-800 border border-white/5 rounded-2xl flex gap-4 items-center">
+                    <div class="w-10 h-10 rounded-full bg-dark-700 flex items-center justify-center">
+                        <i class="fa-solid fa-${icon}"></i>
+                    </div>
+                    <div>
+                        <p class="text-xs text-white">${n.message}</p>
+                        <p class="text-[9px] text-gray-500 mt-0.5">${n.timestamp?.toDate().toLocaleString() || 'Baru saja'}</p>
+                    </div>
+                </div>`;
+            });
+        }
+
+        async function clearNotifs() {
+             const snap = await db.collection('notifications').get();
+             snap.forEach(d => d.ref.delete());
+             loadNotifs();
+        }
+
+        /* --- SETTINGS & ANNOUNCEMENT --- */
+        async function loadSettings() {
+            const user = auth.currentUser;
+if (!user) return;
+
+const doc = await db.collection('settings')
+    .doc('global')
+    .get();
+            if(doc.exists) {
+                const s = doc.data();
+                document.getElementById('set-approval').checked = s.approvalRequired;
+                document.getElementById('set-limit').value = s.uploadLimitPerDay;
+                document.getElementById('set-maxsize').value = s.maxFileSizeMB;
+            }
+        }
+
+        async function saveSettings() {
+            await db.collection('settings').doc('global').set({
+                approvalRequired: document.getElementById('set-approval').checked,
+                uploadLimitPerDay: document.getElementById('set-limit').value,
+                maxFileSizeMB: document.getElementById('set-maxsize').value
+            });
+            showToast("Settings Updated!");
+        }
+
+        async function loadAnnouncements() {
+            const user = auth.currentUser;
+if (!user) return;
+
+const snap = await db.collection('announcements')
+    .doc('main')
+    .get();
+            if(snap.exists) {
+                document.getElementById('note-text').value = snap.data().text;
+                document.getElementById('note-status').value = snap.data().active ? 'active' : 'inactive';
+            }
+        }
+
+        async function saveAnnouncement() {
+            await db.collection('announcements').doc('main').set({
+                text: document.getElementById('note-text').value,
+                active: document.getElementById('note-status').value === 'active',
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            showToast("Announcement Updated!");
+        }
+
+        /* --- UTILS --- */
+        function showToast(text) {
+            const t = document.getElementById('toast');
+            document.getElementById('toast-text').innerText = text;
+            t.classList.add('show');
+            setTimeout(() => t.classList.remove('show'), 3000);
+        }
+        
+        function switchTab(tabId) {
+    // Sembunyikan semua section
+    document.querySelectorAll('main section').forEach(s => s.classList.add('hidden'));
+    // Tampilkan section yang dipilih
+    document.getElementById(`tab-${tabId}`).classList.remove('hidden');
+    
+    // Update styling tombol navigasi
+    document.querySelectorAll('.nav-link').forEach(link => {
+        link.classList.remove('bg-white/10', 'text-white');
+        link.classList.add('text-gray-400');
+    });
+    
+    const activeBtn = document.getElementById(`btn-${tabId}`);
+    if(activeBtn) {
+        activeBtn.classList.remove('text-gray-400');
+        activeBtn.classList.add('bg-white/10', 'text-white');
+    }
+
+    // Update judul di header
+    const titles = {
+        'upload': 'Upload Mod',
+        'manage': 'Database Mod',
+        'notif': 'Activity Logs',
+        'announcement': 'Announcement',
+        'settings': 'Settings'
+    };
+    document.getElementById('current-tab-title').innerText = titles[tabId] || 'Dashboard';
+}
+
+async function handleLogin() {
+    const email = document.getElementById('adminEmail').value;
+    const pass = document.getElementById('adminPassword').value;
+    const btn = document.getElementById('loginBtn');
+
+    if(!email || !pass) return showToast("Isi semua field!");
+
+    try {
+        btn.innerText = "Authenticating...";
+        await auth.signInWithEmailAndPassword(email, pass);
+        
+        // Sembunyikan login, tampilkan dashboard
+        document.getElementById('login-section').classList.add('hidden');
+        document.getElementById('admin-dashboard').classList.remove('hidden');
+        
+        // Load semua data awal
+        loadMods();
+        loadNotifs();
+        loadSettings();
+        loadAnnouncements();
+        showToast("Selamat datang, Admin!");
+    } catch(e) {
+        showToast("Login Gagal: " + e.message);
+        btn.innerText = "Masuk Ke Dashboard";
+    }
+}
+
+function handleLogout() {
+    auth.signOut().then(() => {
+        location.reload(); // Refresh halaman untuk balik ke menu login
+    });
+}
+
+
+    </script>
+</body>
+</html>

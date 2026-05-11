@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="Content-Security-Policy"
+    content="default-src 'self' https://*.gstatic.com https://*.firebaseio.com https://*.googleapis.com https://api.cloudinary.com; 
+             img-src 'self' data: https://*.cloudinary.com https://res.cloudinary.com https://images.weserv.nl; 
+             script-src 'self' 'unsafe-inline' https://www.gstatic.com; 
+             style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com;
+             font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com;">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Qinzx Exe</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="preconnect" href="https://images.weserv.nl">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<!-- INTRO ANIMATION -->
+<div class="intro-wrapper" id="introWrapper">
+  <div class="intro-step-1">WELCOME TO</div>
+  <div class="intro-step-2">
+    <i class="fa-solid fa-microchip intro-icon"></i>
+    <h1 class="intro-title">Qinzx Exe</h1>
+    <div class="intro-subtitle">
+      <i class="fa-solid fa-shield-halved"></i> Aman & Bebas Root<br>
+      <i class="fa-solid fa-bolt"></i> Update Mod Cepat & Gratis
+    </div>
+  </div>
+</div>
+
+<!-- MAIN APP CONTENT -->
+<div class="app" id="app">
+  
+  <!-- Navbar -->
+  <nav class="navbar">
+    <div class="logo">
+      <i class="fa-solid fa-layer-group" style="color: var(--primary);"></i> Qinzx<span>Exe</span>
+    </div>
+    <div class="search-container">
+      <i class="fa-solid fa-magnifying-glass"></i>
+      <input type="text" id="search" placeholder="Cari mod...">
+    </div>
+  </nav>
+
+  <!-- Hero Section -->
+  <section class="hero">
+    <div class="hero-content">
+      <h1>Akses Mod <br><span>Premium Gratis</span></h1>
+      <p>Berbagai APK, Game, dan Script yang bisa kalian downloadðŸ¤¤</p>
+      <div class="hero-buttons">
+
+  <button class="hero-btn" style="background:#22c55e;"
+  onclick="window.open('https://whatsapp.com/channel/0029VbCCbN9AojYwc7gebK3D')">
+  <i class="fa-brands fa-whatsapp"></i> WhatsApp
+</button>
+
+<button class="hero-btn" style="background:#ef4444;"
+  onclick="window.open('https://youtube.com/@sedangberproses-yah?si=7J7yVblAVGktx1Cz')">
+  <i class="fa-brands fa-youtube"></i> YouTube
+</button>
+
+</div>
+  </section>
+
+  <!-- Categories -->
+  <div class="section-header">
+    <h3><i class="fa-solid fa-compass"></i> Kategori Mods</h3>
+  </div>
+  <div class="category-scroll">
+    <div class="cat-item active" data-cat="ALL"><i class="fa-solid fa-border-all"></i> Semua</div>
+    <div class="cat-item" data-cat="APK"><i class="fa-brands fa-android"></i> APK Mods</div>
+    <div class="cat-item" data-cat="GAME"><i class="fa-solid fa-gamepad"></i> Game Mods</div>
+    <div class="cat-item" data-cat="SCRIPT"><i class="fa-solid fa-code"></i> Script</div>
+    <div class="cat-item" data-cat="DLL"><i class="fa-solid fa-file-code"></i> DLL</div>
+  </div>
+
+  <!-- Mods Grid -->
+  <div class="mods" id="modsList">
+    <!-- Konten di-generate JS -->
+  </div>
+
+  <!-- Bottom Nav -->
+  <nav class="bottom-nav">
+    <button class="nav-item active" onclick="scrollToTop()">
+      <i class="fa-solid fa-house"></i>
+      <span>Beranda</span>
+    </button>
+    <button class="nav-item" id="openUpload">
+  <i class="fa-solid fa-plus"></i>
+  <span>Upload</span>
+</button>
+    <button class="nav-item" onclick="window.open('admin.html', '_blank')">
+      <i class="fa-solid fa-user-shield"></i>
+      <span>Admin</span>
+    </button>
+  </nav>
+</div>
+
+<!-- DETAIL PAGE (ELASTIC WINDOW) -->
+<div id="detailPanel" style="touch-action: pan-y;">
+  <div class="detail-header">
+    <div class="back-btn" id="detailBackBtn"><i class="fa-solid fa-arrow-left"></i></div>
+    <span id="detailTitleTop" style="font-weight:700; font-size:16px;"></span>
+  </div>
+  
+  <div id="detailContent">
+    <div class="detail-hero">
+      <img id="detailImg" src="" alt="Mod Preview">
+      <button class="img-nav-btn" id="prevImgBtn"><i class="fa-solid fa-chevron-left"></i></button>
+      <button class="img-nav-btn" id="nextImgBtn"><i class="fa-solid fa-chevron-right"></i></button>
+    </div>
+    
+    <div class="detail-info">
+      <div class="detail-tags">
+        <span class="detail-badge" id="detailCategory"></span>
+        <span class="detail-badge" style="background:#fef3c7; color:#d97706;"><i class="fa-solid fa-star"></i> Verified</span>
+      </div>
+      <h2 id="detailTitle"></h2>
+      
+      <div class="detail-desc-box">
+        <h4><i class="fa-solid fa-scroll"></i> Deskripsi Mengenai Mod</h4>
+        <p id="detailDesc"></p>
+      </div>
+    </div>
+  </div>
+  
+  <button class="floating-download" id="detailDownloadSmall">
+    <i class="fa-solid fa-download"></i> Unduh File Sekarang
+  </button>
+</div>
+
+<div id="uploadModal" class="upload-modal">
+  <div class="upload-card">
+    <h2><i class="fa-solid fa-cloud-arrow-up"></i> Upload Mod Baru</h2>
+
+    <!-- INPUT -->
+    <input type="text" id="uTitle" placeholder="Judul Mod">
+    <textarea id="uDesc" placeholder="Deskripsi lengkap fitur mod..."></textarea>
+
+    <select id="uCategory">
+      <option value="APK">APK Mods</option>
+      <option value="GAME">Game Mods</option>
+      <option value="SCRIPT">Script</option>
+      <option value="DLL">DLL</option>
+    </select>
+
+    <input type="text" id="uLink" placeholder="URL Download (Mediafire/Drive)">
+
+    <div class="upload-box">
+
+  <!-- GAMBAR 1 -->
+  <div class="upload-group">
+    <label>ðŸ“· Gambar 1 (Cover)</label>
+    <input type="file" id="uImg1">
+    <div class="progress">
+      <div class="progress-bar" id="pubProg1"></div>
+    </div>
+  </div>
+
+  <!-- GAMBAR 2 -->
+  <div class="upload-group">
+    <label>ðŸ“· Gambar Tambahan</label>
+    <input type="file" id="uImg2">
+    <div class="progress">
+      <div class="progress-bar" id="pubProg2"></div>
+    </div>
+  </div>
+
+</div>
+
+    <!-- BUTTON -->
+    <button id="submitUpload" class="btn-primary">Publikasikan Mod</button>
+    <button onclick="closeUpload()" class="btn-close">Tutup</button>
+  </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>

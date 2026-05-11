@@ -257,7 +257,7 @@ linear-gradient(
   rgba(124, 58, 237, 0.72) 85%,
   rgba(109, 40, 217, 0.90) 100%
 ),
-url("banner.png") no-repeat center;
+url("banner.jpg") no-repeat center;
 background-size: cover;
   color: white;
   position: relative;
